@@ -1,0 +1,58 @@
+# Airflow Pod가 특정 노드에 배치되도록 지정합니다.
+nodeSelector:
+  agentpool: default
+
+# Airflow Executor 설정
+executor: 'KubernetesExecutor'
+
+# 모든 Airflow 컨테이너에 대한 환경 변수
+env:
+  - name: ENVIRONMENT
+    value: dev
+
+# 추가 환경 변수 설정
+extraEnv: |
+  - name: AIRFLOW__CORE__DEFAULT_TIMEZONE
+    value: 'Asia/Seoul'  # 한국 표준 시간대 설정
+
+# Airflow 설정 파일을 수정합니다.
+postgresql:
+  enabled: true
+
+# Pgbouncer 활성화 설정
+# 자세한 내용은 https://airflow.apache.org/docs/helm-chart/stable/production-guide.html#pgbouncer 참조
+pgbouncer:
+  enabled: true
+
+logs:
+  persistence:
+    enabled: true
+    existingClaim: pvc-airflow-logs
+    storageClassName: azureblob-fuse-premium
+
+# We disable the log groomer sidecar because we use Azure Blob Storage for logs,
+# where a lifecycle policy is already set
+triggerer:
+  logGroomerSidecar:
+    enabled: false
+
+scheduler:
+  logGroomerSidecar:
+    enabled: false
+
+workers:
+  logGroomerSidecar:
+    enabled: false
+
+dags:
+  gitSync:
+    enabled: true
+    repo: git@github.com:StatisticsFox/AKS-DAG-tset.git
+    branch: main
+    rev: HEAD
+    depth: 1
+    maxFailures: 0
+    subPath: 'dags'
+    sshKeySecret: airflow-git-ssh-secret
+    knownHosts: |
+      github.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCj7ndNxQowgcQnjshcLrqPEiiphnt+VTTvDP6mHBL9j1aNUkY4Ue1gvwnGLVlOhGeYrnZaMgRK6+PKCUXaDbC7qtbW8gIkhL7aGCsOr/C56SJMy/BCZfxd1nWzAOxSDPgVsmerOBYfNqltV9/hWCqBywINIR+5dIg6JTJ72pcEpEjcYgXkE2YEFXV1JHnsKgbLWNlhScqb2UmyRkQyytRLtL+38TGxkxCflmO+5Z8CSSNY7GidjMIZ7Q4zMjA2n1nGrlTDkzwDCsw+wqFPGQA179cnfGWOWRVruj16z6XyvxvjJwbz0wQZ75XK5tKSb7FNyeIEs4TT4jk+S4dhPeAUC5y+bDYirYgM4GC7uEnztnZyaVWQ7B381AK4Qdrwt51ZqExKbQpTUNn+EjqoTwvqNj4kqx5QUCI0ThS/YkOxJCXmPUWZbhjpCg56i+2aB6CmK2JGhn57K5mj0MNdBXA4/WnwH6XoPWJzK5Nyu2zB3nAZp+S5hpQs+p1vN1/wsjk=
