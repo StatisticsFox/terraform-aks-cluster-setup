@@ -5,3 +5,4 @@ credentials.json
 terraform.tfstate
 terraform.tfstate.backup
 .terraform.lock.hcl
+docker-build.sh
